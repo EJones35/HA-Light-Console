@@ -478,10 +478,8 @@ async function redAlert(){
   $('#btnRed').classList.add('active','pulse-anim');
   renderLights();
   const ids = selectedIds();
-  // initial hit - deep red
-  for(const id of ids){
-    await haCall('light/turn_on', {entity_id:id, rgb_color:[255,0,0], brightness:255, transition:0.4});
-  }
+  // initial hit - deep red - parallel for phone latency
+  await Promise.all(ids.map(id => haCall('light/turn_on', {entity_id:id, rgb_color:[255,0,0], brightness:255, transition:0.4})));
   toast('RED ALERT - all hands to stations', 2200);
   // pulse loop - toggle brightness
   pulseHigh = true;
@@ -504,9 +502,7 @@ async function yellowAlert(){
   $('#btnYellow').classList.add('active','pulse-anim');
   renderLights();
   const ids = selectedIds();
-  for(const id of ids){
-    await haCall('light/turn_on', {entity_id:id, rgb_color:[255,160,0], brightness:255, transition:0.4});
-  }
+  await Promise.all(ids.map(id => haCall('light/turn_on', {entity_id:id, rgb_color:[255,160,0], brightness:255, transition:0.4})));
   toast('YELLOW ALERT - pulsing amber', 2200);
   pulseHigh = true;
   pulseTimer = setInterval(async ()=>{
@@ -529,11 +525,8 @@ async function clearAlert(){
   setTimeout(()=>$('#btnClear').classList.remove('active'), 1200);
   renderLights();
   const ids = selectedIds();
-  for(const id of ids){
-    // warm white 4000K - use color_temp_kelvin (kelvin deprecated)
-    await haCall('light/turn_on', {entity_id:id, color_temp_kelvin:4000, brightness:255, transition:0.7});
-  }
-  toast('Clear - condition normal (4000K)', 2000);
+  await Promise.all(ids.map(id => haCall('light/turn_on', {entity_id:id, color_temp_kelvin:4000, brightness:255, transition:0.4})));
+  toast('Clear - condition normal (4000K)', 1500);
 }
 
 async function lightsOff(){
@@ -541,10 +534,9 @@ async function lightsOff(){
   vibrate(18);
   stopPulse();
   const ids = selectedIds();
-  for(const id of ids){
-    await haCall('light/turn_off', {entity_id:id});
-  }
-  toast('Lights off', 1800);
+  // instant - fire all in parallel, no transition wait
+  await Promise.all(ids.map(id => haCall('light/turn_off', {entity_id:id})));
+  toast('Lights off', 1200);
 }
 
 async function testFlash(){
