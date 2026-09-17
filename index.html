@@ -587,24 +587,21 @@ async function pingHA(){
   }
 }
 
-// init
+// init - GHP mirror: https default, token-free (user pastes once)
 (function init(){
-  // defaults: use discovered IP if no saved URL
+  const DEFAULT_URL = 'https://192.168.0.208:8123';
   const savedUrl = localStorage.getItem(LS_URL);
   const savedTok = localStorage.getItem(LS_TOK);
-  // If no saved URL but we're on HA host, leave blank to use origin; else prefill discovered IP
   if(savedUrl) haUrlEl.value = savedUrl;
-  else if(!location.hostname || location.hostname==='localhost'){
-    haUrlEl.value = 'http://192.168.0.208:8123';
-  } else {
-    haUrlEl.value = '';
-    urlHint.textContent = 'Detected origin ' + location.origin + ' - leave blank to use this';
+  else {
+    haUrlEl.value = DEFAULT_URL;
+    localStorage.setItem(LS_URL, DEFAULT_URL);
   }
   if(savedTok) haTokEl.value = savedTok;
+  // else leave token empty for user to paste (security)
+  urlHint.textContent = 'API: ' + haUrlEl.value.replace(/\/+$/,'') + '/api/';
   renderLights();
   pingHA();
-  // also try to auto-fill URL hint
-  if(haUrlEl.value) urlHint.textContent = 'API: ' + haUrlEl.value.replace(/\/+$/,'') + '/api/';
 })();
 
 // keep pulse alive across visibility changes - no-op, interval handles it
