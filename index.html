@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Captain's Console">
+<meta name="theme-color" content="#0a0e1a">
+<title>Captain's Console - Bridge Command</title>
+<style>
+  :root{
+    --bg:#060a14;
+    --panel:#0e1426;
+    --panel2:#111b36;
+    --line:#1e2a4a;
+    --line2:#2a3a66;
+    --text:#cfe0ff;
+    --muted:#7a8ab0;
+    --amber:#ffb62e;
+    --amber-dim:#8a5f0a;
+    --red:#ff2b2b;
+    --red-dim:#7a0f0f;
+    --red-glow:0 0 18px rgba(255,43,43,.55), 0 0 40px rgba(255,43,43,.25);
+    --yellow:#ffcc33;
+    --yellow-glow:0 0 16px rgba(255,204,51,.5), 0 0 30px rgba(255,204,51,.2);
+    --green:#2eff8a;
+    --blue:#3d8bff;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;background:radial-gradient(1200px 600px at 50% -10%, #1a2a5a 0%, #0a0e1a 45%, #060a14 100%);color:var(--text);font-family: ui-sans-system, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; -webkit-tap-highlight-color: transparent;}
+  body{padding:14px 12px 24px;max-width:520px;margin:0 auto}
+  /* header */
+  .hdr{
+    background:linear-gradient(180deg, #14204a 0%, #0e1426 100%);
+    border:1px solid var(--line2);
+    border-radius:16px;
+    padding:14px 14px 12px;
+    position:relative;
+    overflow:hidden;
+    box-shadow: 0 8px 28px rgba(0,0,0,.45);
+  }
+  .hdr:before{
+    content:"";
+    position:absolute;inset:0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,182,46,.08) 50%, transparent 100%);
+    opacity:.6;
+  }
+  .hdr-top{display:flex;align-items:center;gap:10px;position:relative}
+  .crest{
+    width:42px;height:42px;border-radius:11px;
+    background: radial-gradient(120% 120% at 30% 20%, #ffd27a 0%, #ffb62e 35%, #8a4a00 100%);
+    display:grid;place-items:center;
+    color:#1a0f00;font-weight:900;font-size:18px;
+    box-shadow: 0 4px 14px rgba(255,182,46,.4);
+    flex:0 0 auto;
+  }
+  .hdr-titles{flex:1;min-width:0}
+  .hdr-titles h1{margin:0;font-size:17px;letter-spacing:.14em;font-weight:900;line-height:1;text-transform:uppercase;color:#fff}
+  .hdr-titles p{margin:3px 0 0;font-size:11px;letter-spacing:.08em;color:var(--muted);font-weight:600;text-transform:uppercase}
+  .badge{
+    font-size:10px;letter-spacing:.1em;font-weight:800;
+    background:#081027;color:var(--amber);
+    border:1px solid #2a3a66;border-radius:999px;
+    padding:6px 9px;white-space:nowrap;position:relative;
+  }
+  .hdr-hr{height:1px;background:linear-gradient(90deg, transparent, var(--line2), transparent);margin:12px 0 0}
+  .status-line{position:relative;display:flex;gap:8px;align-items:center;margin-top:10px;font-size:11px;letter-spacing:.07em;font-weight:700;text-transform:uppercase;color:var(--muted)}
+  .dot{width:8px;height:8px;border-radius:99px;background:#2a3a66;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+  .dot.ok{background:var(--green);box-shadow:0 0 8px rgba(46,255,138,.6)}
+  .dot.err{background:var(--red);box-shadow: var(--red-glow)}
+  .dot.warn{background:var(--yellow);box-shadow: var(--yellow-glow)}
+  /* panels */
+  .panel{
+    background: linear-gradient(180deg, var(--panel) 0%, #0a1024 100%);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px;
+    margin-top:12px;
+    box-shadow: 0 10px 26px rgba(0,0,0,.35);
+  }
+  .panel h2{
+    margin:0 0 10px;
+    font-size:11px;letter-spacing:.16em;font-weight:900;
+    color:var(--amber);text-transform:uppercase;
+    display:flex;align-items:center;gap:8px;
+  }
+  .panel h2:after{content:"";flex:1;height:1px;background:linear-gradient(90deg, var(--line2), transparent)}
+  .sub{font-size:11px;color:var(--muted);margin:-6px 0 10px;letter-spacing:.03em;line-height:1.4}
+  /* light grid */
+  .light-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .light{
+    position:relative;
+    background: linear-gradient(180deg, #121d3a 0%, #0d152e 100%);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:11px 10px 10px;
+    display:flex;align-items:center;gap:10px;
+    cursor:pointer;user-select:none;
+    transition: transform .08s, border-color .15s, background .15s, box-shadow .15s;
+  }
+  .light:active{transform:scale(.98)}
+  .light.on{
+    border-color: var(--amber);
+    background: linear-gradient(180deg, #1a2a5a 0%, #12204a 100%);
+    box-shadow: 0 0 0 1px rgba(255,182,46,.25), 0 6px 18px rgba(0,0,0,.4);
+  }
+  .light.on.all{border-color: var(--blue);box-shadow:0 0 0 1px rgba(61,139,255,.3)}
+  .lb{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:14px;flex:0 0 auto;border:1px solid rgba(255,255,255,.08)}
+  .light[data-k="gryffindor"] .lb{background: radial-gradient(100% 100% at 30% 20%, #ff9a9a 0%, #ff2b2b 55%, #7a0f0f 100%);color:#fff}
+  .light[data-k="hufflepuff"] .lb{background: radial-gradient(100% 100% at 30% 20%, #ffe8a0 0%, #ffb62e 55%, #7a4a00 100%);color:#1a0f00}
+  .light[data-k="study"] .lb{background: radial-gradient(100% 100% at 30% 20%, #a0c4ff 0%, #3d8bff 55%, #0a2a6a 100%);color:#fff}
+  .light[data-k="front"] .lb{background: radial-gradient(100% 100% at 30% 20%, #c2ffd0 0%, #2eff8a 55%, #0a4a2a 100%);color:#001a0f}
+  .light[data-k="back"] .lb{background: radial-gradient(100% 100% at 30% 20%, #d0c2ff 0%, #8a5cff 55%, #1e0a4a 100%);color:#fff}
+  .light[data-k="all"] .lb{background: linear-gradient(135deg, #1e2a5a, #0a1024);border-color:var(--line2);color:var(--muted)}
+  .light.on[data-k="all"] .lb{background: radial-gradient(100% 100% at 30% 20%, #a0c4ff, #3d8bff);color:#fff}
+  .ln{flex:1;min-width:0}
+  .ln b{display:block;font-size:12px;letter-spacing:.06em;font-weight:800;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ln span{display:block;font-size:10px;color:var(--muted);letter-spacing:.06em;font-weight:700;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .check{width:18px;height:18px;border-radius:99px;border:1.5px solid #2a3a66;display:grid;place-items:center;font-size:10px;color:transparent;flex:0 0 auto;transition:all .15s}
+  .light.on .check{background:var(--amber);border-color:var(--amber);color:#1a0f00}
+  .light.on.all .check{background:var(--blue);border-color:var(--blue);color:#fff}
+  .sel-bar{display:flex;gap:8px;margin-top:10px}
+  .mini{
+    flex:1;
+    background:#0a1024;border:1px solid var(--line);color:var(--muted);
+    border-radius:10px;padding:9px 8px;
+    font-size:11px;letter-spacing:.08em;font-weight:800;text-transform:uppercase;
+    cursor:pointer;
+  }
+  .mini:active{transform:scale(.98)}
+  /* alert buttons */
+  .alert-grid{display:grid;grid-template-columns:1fr;gap:10px}
+  .abtn{
+    position:relative;
+    border-radius:14px;
+    padding:16px 14px;
+    border:1.5px solid transparent;
+    cursor:pointer;user-select:none;
+    display:flex;align-items:center;gap:12px;
+    transition: transform .08s, filter .15s, box-shadow .15s;
+    overflow:hidden;
+  }
+  .abtn:active{transform:scale(.985)}
+  .abtn .ico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex:0 0 auto;border:1px solid rgba(255,255,255,.12)}
+  .abtn .txt{flex:1;min-width:0;text-align:left}
+  .abtn .txt b{display:block;font-size:15px;letter-spacing:.08em;font-weight:900;line-height:1;text-transform:uppercase}
+  .abtn .txt span{display:block;font-size:11px;letter-spacing:.05em;font-weight:600;margin-top:3px;opacity:.9;line-height:1.2}
+  .abtn .go{font-size:10px;letter-spacing:.14em;font-weight:900;opacity:.7}
+  /* red */
+  .abtn.red{
+    background: linear-gradient(180deg, #3a0f14 0%, #1f070a 100%);
+    border-color: #5a1a1a;
+    color:#ffd0d0;
+    box-shadow: 0 10px 22px rgba(0,0,0,.45);
+  }
+  .abtn.red.active{
+    border-color: var(--red);
+    box-shadow: var(--red-glow), 0 10px 22px rgba(0,0,0,.45);
+    background: linear-gradient(180deg, #5a0f14 0%, #2a070a 100%);
+  }
+  .abtn.red .ico{background: radial-gradient(100% 100% at 30% 20%, #ff6b6b 0%, #ff2b2b 60%, #7a0f0f 100%);color:#fff;box-shadow: 0 4px 12px rgba(255,43,43,.4)}
+  /* yellow */
+  .abtn.yellow{
+    background: linear-gradient(180deg, #3a2f0f 0%, #1f1a07 100%);
+    border-color: #5a4a1a;
+    color:#ffeec2;
+  }
+  .abtn.yellow.active{
+    border-color: var(--yellow);
+    box-shadow: var(--yellow-glow);
+    background: linear-gradient(180deg, #5a4a1a 0%, #2a2407 100%);
+  }
+  .abtn.yellow .ico{background: radial-gradient(100% 100% at 30% 20%, #ffe27a 0%, #ffcc33 60%, #8a6a00 100%);color:#1a0f00}
+  /* clear / green */
+  .abtn.clear{
+    background: linear-gradient(180deg, #0f2a2a 0%, #071a1a 100%);
+    border-color: #144a4a;
+    color:#c2fff0;
+  }
+  .abtn.clear.active{
+    border-color: var(--green);
+    box-shadow: 0 0 16px rgba(46,255,138,.35);
+    background: linear-gradient(180deg, #144a3a 0%, #071a1a 100%);
+  }
+  .abtn.clear .ico{background: radial-gradient(100% 100% at 30% 20%, #a0ffcc 0%, #2eff8a 60%, #0a4a2a 100%);color:#001a0f}
+  /* blue / off */
+  .abtn.off{
+    background: linear-gradient(180deg, #0f1a36 0%, #070a1a 100%);
+    border-color: #1a2a5a;
+    color:#c2d4ff;
+  }
+  .abtn.off .ico{background: #0a1024;border-color:var(--line2);color:var(--muted)}
+  /* settings */
+  .row{display:flex;gap:8px}
+  .field{flex:1}
+  .field label{display:block;font-size:10px;letter-spacing:.12em;font-weight:800;color:var(--amber);text-transform:uppercase;margin-bottom:6px}
+  .field input{
+    width:100%;
+    background:#070a14;border:1px solid var(--line);
+    color:var(--text);border-radius:10px;
+    padding:10px 11px;font-size:13px;font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    outline:none;
+  }
+  .field input:focus{border-color: #2a3a66;box-shadow:0 0 0 3px rgba(61,139,255,.12)}
+  .save{
+    background: linear-gradient(180deg, #1a2a5a 0%, #0e1426 100%);
+    border:1px solid var(--line2);color:var(--text);
+    border-radius:10px;padding:11px 14px;
+    font-size:12px;letter-spacing:.08em;font-weight:800;text-transform:uppercase;
+    cursor:pointer;align-self:flex-end;white-space:nowrap;
+  }
+  .save:active{transform:scale(.98)}
+  .hint{font-size:11px;color:var(--muted);line-height:1.4;margin-top:8px}
+  .hint code{font-family: ui-monospace, monospace;background:#070a14;border:1px solid #1a2a5a;padding:1px 5px;border-radius:6px;color:var(--text);font-size:11px}
+  .toast{
+    position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(14px);
+    background:#0a1024;border:1px solid var(--line2);color:var(--text);
+    padding:10px 14px;border-radius:12px;
+    font-size:12px;letter-spacing:.04em;font-weight:700;
+    box-shadow:0 12px 30px rgba(0,0,0,.5);
+    opacity:0;pointer-events:none;transition: all .22s;
+    max-width:92%;text-align:center;z-index:99;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .pulse-anim{animation: pulseBorder 1.1s ease-in-out infinite}
+  @keyframes pulseBorder{0%,100%{filter:brightness(1)}50%{filter:brightness(1.25)}}
+  .foot{margin-top:14px;text-align:center;font-size:10px;letter-spacing:.1em;font-weight:700;color:var(--muted);text-transform:uppercase;opacity:.7}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-top">
+    <div class="crest">⬢</div>
+    <div class="hdr-titles">
+      <h1>Captain's Console</h1>
+      <p>UCS Takanami &bull; Bridge Command &bull; Alert Control</p>
+    </div>
+    <div class="badge" id="connBadge">OFFLINE</div>
+  </div>
+  <div class="hdr-hr"></div>
+  <div class="status-line">
+    <div class="dot" id="dot"></div>
+    <span id="statusText">Not connected - set Home Assistant below</span>
+    <span style="margin-left:auto;opacity:.6" id="selCount">0 selected</span>
+  </div>
+  <div id="setupBanner" style="display:none;margin-top:10px;background:#1a0f00;border:1px solid #5a4a1a;color:#ffeec2;border-radius:10px;padding:10px 11px;font-size:11px;line-height:1.4;position:relative">
+    <b style="color:var(--yellow)">⚠ Setup needed:</b> paste your HA Long-Lived Token below (scroll down to <b>Connection</b>), tap SAVE, then alerts will fire. Without it the console can't talk to HA.
+  </div>
+</div>
+
+<div class="panel" id="lightsPanel">
+  <h2>◈ Light Select</h2>
+  <p class="sub">Tap to pick which lights respond. <b style="color:var(--text)">ALL</b> arms every deck. Like the BC console - you choose the zone, then hit the alert.</p>
+  <div class="light-grid" id="lightGrid">
+    <!-- injected -->
+  </div>
+  <div class="sel-bar">
+    <button class="mini" id="btnAll">ALL LIGHTS</button>
+    <button class="mini" id="btnNone">CLEAR</button>
+    <button class="mini" id="btnTest">TEST FLASH</button>
+  </div>
+</div>
+
+<div class="panel">
+  <h2>⚡ Alert Controls</h2>
+  <p class="sub">Mirrors the BC captain's panel - one slap, whole ship responds. Red pulses red, Yellow pulses amber, Clear resets to ship-normal.</p>
+  <div class="alert-grid">
+    <button class="abtn red" id="btnRed">
+      <div class="ico">⬤</div>
+      <div class="txt"><b>Red Alert</b><span>General Quarters - pulsing red, all hands to stations</span></div>
+      <div class="go">ENGAGE ▸</div>
+    </button>
+    <button class="abtn yellow" id="btnYellow">
+      <div class="ico">⬢</div>
+      <div class="txt"><b>Yellow Alert</b><span>Stand by - pulsing amber, prepare for action</span></div>
+      <div class="go">ENGAGE ▸</div>
+    </button>
+    <button class="abtn clear" id="btnClear">
+      <div class="ico">⬣</div>
+      <div class="txt"><b>Clear Alert</b><span>Condition normal - warm white 4000K, 100%</span></div>
+      <div class="go">RESET ▸</div>
+    </button>
+    <button class="abtn off" id="btnOff">
+      <div class="ico">○</div>
+      <div class="txt"><b>Lights Off</b><span>Blackout - all selected off</span></div>
+      <div class="go">CUT ▸</div>
+    </button>
+  </div>
+  <div class="hint" id="activeHint" style="display:none"></div>
+</div>
+
+<div class="panel" id="setupPanel">
+  <h2>⚙ Connection</h2>
+  <p class="sub">Runs on your WiFi - open this page from HA at <code>/local/captains_console.html</code>. Token stays on this phone only (localStorage).</p>
+  <div class="row">
+    <div class="field" style="flex:1.4">
+      <label>Home Assistant URL</label>
+      <input id="haUrl" placeholder="http://192.168.0.208:8123" autocomplete="off" spellcheck="false">
+    </div>
+    <button class="save" id="btnSave">SAVE</button>
+  </div>
+  <div class="field" style="margin-top:10px">
+    <label>Long-Lived Access Token</label>
+    <input id="haToken" type="password" placeholder="paste token - Bearer ..." autocomplete="off" spellcheck="false">
+    <div class="hint">Create at HA &rarr; Profile &rarr; Long-Lived Access Tokens. Paste once - it never leaves this device. <a href="#" id="showTok" style="color:var(--amber);text-decoration:none">show</a></div>
+  </div>
+  <div class="hint" id="urlHint"></div>
+</div>
+
+<div class="foot">Bridge Command &bull; Takanami Console &bull; For Ethan's Phone &bull; Jarvis 2026</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const LIGHTS = [
+  {key:'gryffindor', id:'light.essentials_a19_a60',   label:'Gryffindor',   sub:'Node1 · NL67', icon:'⚡'},
+  {key:'hufflepuff', id:'light.essentials_a19_a60_2', label:'Hufflepuff',   sub:'Node3 · NL67', icon:'◈'},
+  {key:'study',      id:'light.essentials_a19_a60_3', label:'Study',        sub:'Node4 · NL67', icon:'⬣'},
+  {key:'front',      id:'light.essentials_a19_a60_4', label:'Front Living', sub:'Node5 · NL67', icon:'⬢'},
+  {key:'back',       id:'light.essentials_a19_a60_5', label:'Back Living',  sub:'Node8 · NL67', icon:'⬤'},
+];
+const LS_URL='bc_console_ha_url';
+const LS_TOK='bc_console_ha_tok';
+const LS_SEL='bc_console_sel';
+
+let selected = new Set(JSON.parse(localStorage.getItem(LS_SEL) || '["gryffindor","hufflepuff","study","front","back"]'));
+let pulseTimer = null;
+let pulseHigh = true;
+let activeAlert = null;
+
+const $ = s=>document.querySelector(s);
+const grid = $('#lightGrid');
+const dot = $('#dot');
+const badge = $('#connBadge');
+const statusText = $('#statusText');
+const selCount = $('#selCount');
+const toastEl = $('#toast');
+const haUrlEl = $('#haUrl');
+const haTokEl = $('#haToken');
+const urlHint = $('#urlHint');
+
+function toast(msg, ms=2400){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastEl._t);
+  toastEl._t = setTimeout(()=>toastEl.classList.remove('show'), ms);
+}
+function vibrate(p){ try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} }
+
+function getHaBase(){
+  let u = (haUrlEl.value || '').trim().replace(/\/+$/,'');
+  if(!u){
+    // if served from HA, same origin is the HA
+    if(location.hostname && location.port){
+      return location.origin.replace(/\/+$/,'');
+    }
+    return '';
+  }
+  return u;
+}
+function getToken(){ return (haTokEl.value || '').trim(); }
+
+function setConn(state, msg){
+  dot.className = 'dot' + (state==='ok'?' ok': state==='err'?' err': state==='warn'?' warn':'');
+  badge.textContent = state==='ok' ? 'ONLINE' : state==='warn' ? 'ARMED' : state==='err' ? 'ERROR' : 'OFFLINE';
+  badge.style.color = state==='ok' ? 'var(--green)' : state==='err' ? 'var(--red)' : state==='warn' ? 'var(--yellow)' : 'var(--amber)';
+  statusText.textContent = msg;
+  urlHint.textContent = getHaBase() ? 'API: ' + getHaBase() + '/api/' : 'Will use this page origin as HA (when opened via /local/)';
+  const banner = document.getElementById('setupBanner');
+  const tok = getToken();
+  if(!tok && banner){ banner.style.display='block'; } else if(banner){ banner.style.display='none'; }
+}
+
+function renderLights(){
+  grid.innerHTML = '';
+  // real lights
+  for(const L of LIGHTS){
+    const on = selected.has(L.key);
+    const d = document.createElement('div');
+    d.className = 'light' + (on?' on':'');
+    d.dataset.k = L.key;
+    d.innerHTML = `<div class="lb">${L.icon}</div><div class="ln"><b>${L.label}</b><span>${L.sub}</span></div><div class="check">✓</div>`;
+    d.onclick = ()=>{ toggleLight(L.key); vibrate(18); };
+    grid.appendChild(d);
+  }
+  // ALL tile
+  const allOn = LIGHTS.every(l=>selected.has(l.key));
+  const dAll = document.createElement('div');
+  dAll.className = 'light' + (allOn?' on all':'');
+  dAll.dataset.k = 'all';
+  dAll.innerHTML = `<div class="lb">⬡</div><div class="ln"><b>ALL DECKS</b><span>${allOn?'Armed':'Tap to arm all'}</span></div><div class="check">✓</div>`;
+  dAll.onclick = ()=>{ if(allOn){ selected.clear(); } else { LIGHTS.forEach(l=>selected.add(l.key)); } saveSel(); renderLights(); vibrate(18); };
+  grid.appendChild(dAll);
+
+  selCount.textContent = selected.size===0 ? '0 selected - pick a zone' : selected.size===5 ? 'ALL 5 selected' : selected.size + ' selected';
+  // dim alert buttons if none selected
+  const none = selected.size===0;
+  for(const id of ['btnRed','btnYellow','btnClear','btnOff']){
+    const b = document.getElementById(id);
+    b.style.opacity = none ? .45 : 1;
+    b.style.pointerEvents = none ? 'none' : 'auto';
+  }
+  // pulse hint
+  const hint = $('#activeHint');
+  if(activeAlert){
+    hint.style.display='block';
+    hint.textContent = activeAlert==='red' ? '● RED ALERT active - pulsing red on selected lights (tap Clear or Yellow to cancel)' : activeAlert==='yellow' ? '● YELLOW ALERT active - pulsing amber on selected lights' : '';
+    hint.style.color = activeAlert==='red' ? 'var(--red)' : 'var(--yellow)';
+  } else {
+    hint.style.display='none';
+  }
+}
+function toggleLight(k){
+  if(selected.has(k)) selected.delete(k); else selected.add(k);
+  saveSel(); renderLights();
+}
+function saveSel(){ localStorage.setItem(LS_SEL, JSON.stringify([...selected])); }
+
+async function haCall(service, data){
+  const base = getHaBase();
+  const tok = getToken();
+  if(!base){ toast('Set Home Assistant URL first'); setConn('warn','Set HA URL + token - then test'); return null; }
+  if(!tok){ toast('Paste your Long-Lived Token'); setConn('warn','Token missing - paste it in Connection'); return null; }
+  const url = base + '/api/services/' + service;
+  try{
+    const r = await fetch(url, {
+      method:'POST',
+      headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    if(!r.ok){
+      const t = await r.text().catch(()=>'');
+      throw new Error(r.status+' '+r.statusText+' '+t.slice(0,180));
+    }
+    setConn('ok','Online - ' + base);
+    return await r.json().catch(()=> ({}));
+  }catch(e){
+    console.error(e);
+    setConn('err','Error - ' + e.message.slice(0,90));
+    toast('HA error: ' + e.message.slice(0,90), 3200);
+    return null;
+  }
+}
+
+function selectedIds(){ return [...selected].map(k=> LIGHTS.find(l=>l.key===k).id); }
+
+function stopPulse(){
+  if(pulseTimer){ clearInterval(pulseTimer); pulseTimer=null; }
+  activeAlert=null;
+  for(const b of document.querySelectorAll('.abtn')) b.classList.remove('active','pulse-anim');
+  renderLights();
+}
+
+async function redAlert(){
+  if(selected.size===0) return toast('Pick a light first');
+  vibrate([30,40,30]);
+  stopPulse();
+  activeAlert='red';
+  $('#btnRed').classList.add('active','pulse-anim');
+  renderLights();
+  const ids = selectedIds();
+  // initial hit - deep red
+  for(const id of ids){
+    await haCall('light/turn_on', {entity_id:id, rgb_color:[255,0,0], brightness:255, transition:0.4});
+  }
+  toast('RED ALERT - all hands to stations', 2200);
+  // pulse loop - toggle brightness
+  pulseHigh = true;
+  pulseTimer = setInterval(async ()=>{
+    pulseHigh = !pulseHigh;
+    const b = pulseHigh ? 255 : 55;
+    const tr = 0.9;
+    for(const id of ids){
+      haCall('light/turn_on', {entity_id:id, rgb_color:[255,8,8], brightness:b, transition:tr});
+    }
+  }, 1100);
+  setConn('ok','RED ALERT pulsing - ' + getHaBase());
+}
+
+async function yellowAlert(){
+  if(selected.size===0) return toast('Pick a light first');
+  vibrate([30,40,30]);
+  stopPulse();
+  activeAlert='yellow';
+  $('#btnYellow').classList.add('active','pulse-anim');
+  renderLights();
+  const ids = selectedIds();
+  for(const id of ids){
+    await haCall('light/turn_on', {entity_id:id, rgb_color:[255,160,0], brightness:255, transition:0.4});
+  }
+  toast('YELLOW ALERT - pulsing amber', 2200);
+  pulseHigh = true;
+  pulseTimer = setInterval(async ()=>{
+    pulseHigh = !pulseHigh;
+    const b = pulseHigh ? 255 : 70;
+    const tr = 0.9;
+    for(const id of ids){
+      haCall('light/turn_on', {entity_id:id, rgb_color:[255,155,0], brightness:b, transition:tr});
+    }
+  }, 1100);
+  setConn('ok','YELLOW ALERT pulsing - ' + getHaBase());
+}
+
+async function clearAlert(){
+  if(selected.size===0) return toast('Pick a light first');
+  vibrate(18);
+  stopPulse();
+  activeAlert=null;
+  $('#btnClear').classList.add('active');
+  setTimeout(()=>$('#btnClear').classList.remove('active'), 1200);
+  renderLights();
+  const ids = selectedIds();
+  for(const id of ids){
+    // warm white 4000K - use kelvin, HA supports it; fallback rgb if needed
+    await haCall('light/turn_on', {entity_id:id, kelvin:4000, brightness:255, transition:0.7});
+  }
+  toast('Clear - condition normal (4000K)', 2000);
+}
+
+async function lightsOff(){
+  if(selected.size===0) return toast('Pick a light first');
+  vibrate(18);
+  stopPulse();
+  const ids = selectedIds();
+  for(const id of ids){
+    await haCall('light/turn_off', {entity_id:id});
+  }
+  toast('Lights off', 1800);
+}
+
+async function testFlash(){
+  if(selected.size===0) return toast('Pick a light first');
+  const ids = selectedIds();
+  for(const id of ids) await haCall('light/turn_on', {entity_id:id, rgb_color:[255,255,255], brightness:255, transition:0.15});
+  await new Promise(r=>setTimeout(r,220));
+  for(const id of ids) await haCall('light/turn_on', {entity_id:id, kelvin:4000, brightness:120, transition:0.2});
+  await new Promise(r=>setTimeout(r,180));
+  for(const id of ids) await haCall('light/turn_on', {entity_id:id, kelvin:4000, brightness:255, transition:0.25});
+  toast('Flash test - OK', 1600);
+}
+
+// wiring
+document.getElementById('btnRed').onclick = redAlert;
+document.getElementById('btnYellow').onclick = yellowAlert;
+document.getElementById('btnClear').onclick = clearAlert;
+document.getElementById('btnOff').onclick = lightsOff;
+document.getElementById('btnAll').onclick = ()=>{ LIGHTS.forEach(l=>selected.add(l.key)); saveSel(); renderLights(); vibrate(18); };
+document.getElementById('btnNone').onclick = ()=>{ selected.clear(); stopPulse(); saveSel(); renderLights(); vibrate(18); };
+document.getElementById('btnTest').onclick = ()=>{ testFlash(); vibrate(18); };
+document.getElementById('btnSave').onclick = ()=>{
+  localStorage.setItem(LS_URL, haUrlEl.value.trim());
+  localStorage.setItem(LS_TOK, haTokEl.value.trim());
+  setConn(haTokEl.value.trim() ? 'ok' : 'warn', haTokEl.value.trim() ? 'Saved - online' : 'URL saved - add token');
+  toast('Connection saved', 1600);
+  // quick ping - try to get states
+  pingHA();
+};
+document.getElementById('showTok').onclick = (e)=>{ e.preventDefault(); haTokEl.type = haTokEl.type==='password' ? 'text' : 'password'; e.target.textContent = haTokEl.type==='password' ? 'show' : 'hide'; };
+
+async function pingHA(){
+  const base=getHaBase(); const tok=getToken();
+  if(!base || !tok){ setConn('warn','Set HA URL + token - then alerts will fire'); return; }
+  try{
+    const r = await fetch(base+'/api/', {headers:{'Authorization':'Bearer '+tok}});
+    if(r.ok){ setConn('ok','Online - '+base); } else { setConn('err','Token/URL error - '+r.status); }
+  }catch(e){ setConn('err','Cannot reach '+base); }
+}
+
+// init
+(function init(){
+  // defaults: use discovered IP if no saved URL
+  const savedUrl = localStorage.getItem(LS_URL);
+  const savedTok = localStorage.getItem(LS_TOK);
+  // If no saved URL but we're on HA host, leave blank to use origin; else prefill discovered IP
+  if(savedUrl) haUrlEl.value = savedUrl;
+  else if(!location.hostname || location.hostname==='localhost'){
+    haUrlEl.value = 'http://192.168.0.208:8123';
+  } else {
+    haUrlEl.value = '';
+    urlHint.textContent = 'Detected origin ' + location.origin + ' - leave blank to use this';
+  }
+  if(savedTok) haTokEl.value = savedTok;
+  renderLights();
+  pingHA();
+  // also try to auto-fill URL hint
+  if(haUrlEl.value) urlHint.textContent = 'API: ' + haUrlEl.value.replace(/\/+$/,'') + '/api/';
+})();
+
+// keep pulse alive across visibility changes - no-op, interval handles it
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible' && activeAlert==='red' && !pulseTimer){ /* will resume on next tap */ }});
+</script>
+</body>
+</html>
