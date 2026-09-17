@@ -478,19 +478,19 @@ async function redAlert(){
   $('#btnRed').classList.add('active','pulse-anim');
   renderLights();
   const ids = selectedIds();
-  // initial hit - deep red - parallel for phone latency
-  await Promise.all(ids.map(id => haCall('light/turn_on', {entity_id:id, rgb_color:[255,0,0], brightness:255, transition:0.4})));
+  // initial hit - pure red - parallel for phone latency
+  await Promise.all(ids.map(id => haCall('light/turn_on', {entity_id:id, rgb_color:[255,0,0], brightness:255, transition:0.3})));
   toast('RED ALERT - all hands to stations', 2200);
-  // pulse loop - toggle brightness
+  // pulse loop - pure red, higher low to avoid pink shift on Front Living
   pulseHigh = true;
   pulseTimer = setInterval(async ()=>{
     pulseHigh = !pulseHigh;
-    const b = pulseHigh ? 255 : 55;
-    const tr = 0.9;
+    const b = pulseHigh ? 255 : 85;
+    const tr = 0.85;
     for(const id of ids){
-      haCall('light/turn_on', {entity_id:id, rgb_color:[255,8,8], brightness:b, transition:tr});
+      haCall('light/turn_on', {entity_id:id, rgb_color:[255,0,0], brightness:b, transition:tr});
     }
-  }, 1100);
+  }, 1050);
   setConn('ok','RED ALERT pulsing - ' + getHaBase());
 }
 
@@ -502,17 +502,17 @@ async function yellowAlert(){
   $('#btnYellow').classList.add('active','pulse-anim');
   renderLights();
   const ids = selectedIds();
-  await Promise.all(ids.map(id => haCall('light/turn_on', {entity_id:id, rgb_color:[255,160,0], brightness:255, transition:0.4})));
+  await Promise.all(ids.map(id => haCall('light/turn_on', {entity_id:id, rgb_color:[255,160,0], brightness:255, transition:0.3})));
   toast('YELLOW ALERT - pulsing amber', 2200);
   pulseHigh = true;
   pulseTimer = setInterval(async ()=>{
     pulseHigh = !pulseHigh;
-    const b = pulseHigh ? 255 : 70;
-    const tr = 0.9;
+    const b = pulseHigh ? 255 : 90;
+    const tr = 0.85;
     for(const id of ids){
-      haCall('light/turn_on', {entity_id:id, rgb_color:[255,155,0], brightness:b, transition:tr});
+      haCall('light/turn_on', {entity_id:id, rgb_color:[255,160,0], brightness:b, transition:tr});
     }
-  }, 1100);
+  }, 1050);
   setConn('ok','YELLOW ALERT pulsing - ' + getHaBase());
 }
 
@@ -530,13 +530,17 @@ async function clearAlert(){
 }
 
 async function lightsOff(){
-  if(selected.size===0) return toast('Pick a light first');
+  // CUT = all decks, always - ignore selection (fixes "apart from my one go to 22%")
   vibrate(18);
   stopPulse();
-  const ids = selectedIds();
-  // truly instant - parallel + transition 0 (white used 0.4 but felt instant, Cut needs 0)
+  // kill any in-flight pulse quickly, then cut all 5
+  await new Promise(r=>setTimeout(r,80));
+  const ids = LIGHTS.map(l=>l.id);
   await Promise.all(ids.map(id => haCall('light/turn_off', {entity_id:id, transition:0})));
-  toast('Lights off', 1000);
+  // second confirmation to beat any late pulse packet (22% bug)
+  await new Promise(r=>setTimeout(r,180));
+  await Promise.all(ids.map(id => haCall('light/turn_off', {entity_id:id, transition:0})));
+  toast('CUT - all lights off', 1200);
 }
 
 async function testFlash(){
