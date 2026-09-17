@@ -2,8 +2,8 @@
 
 Bridge Command-style phone console for Home Assistant lights.
 
-**Live (HA local, recommended):** `http://192.168.0.208:8123/local/captains_console.html`  
-**Mirror (GitHub Pages):** `https://ejones35.github.io/HA-Light-Console/` — source mirror, see note below
+**Live (HA local, now https):** `https://192.168.0.208:8123/local/captains_console.html` — self-signed cert (accept once)  
+**Mirror (GitHub Pages):** `https://ejones35.github.io/HA-Light-Console/` — now works, `https → https` (HA is https since 17 Sep)
 
 ### What it does
 - Light picker: 5× Nanoleaf NL67 (Gryffindor / Hufflepuff / Study / Front Living / Back Living) + ALL
@@ -20,8 +20,11 @@ Bridge Command-style phone console for Home Assistant lights.
 
 Token stays in `localStorage` on that device only.
 
-### GitHub Pages note
-GitHub Pages serves over **https**, HA is **http** (`192.168.0.208:8123`). Browsers block mixed-content `https → http` fetches, so the GitHub Pages mirror will show the UI but **can't reach HA** until HA is exposed via https (e.g. Nabu Casa, reverse proxy, or HA with TLS). Use the **HA local URL** for actual control — the GitHub repo is the source/backup.
+### GitHub Pages note (fixed 17 Sep)
+HA is now `https` (`https://192.168.0.208:8123` with self-signed cert at `config/ssl/cert.pem`), so **both versions are `https → https`** and no mixed-content block. 
+- **HA local `https`** works offline on LAN after you accept the cert once (Safari → Show Details → Visit Website).
+- **GitHub Pages `https`** needs internet to load the page itself, then fetches HA `https` on your LAN - works at home with internet.
+- Away from home without internet: use HA local `https` bookmark (no GitHub needed). Tailscale away was scrapped per your order.
 
 ### Files
 - `index.html` — single-file console (also deployed as `captains_console.html` in HA `config/www/`)
