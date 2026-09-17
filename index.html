@@ -248,6 +248,13 @@
   <div id="setupBanner" style="display:none;margin-top:10px;background:#1a0f00;border:1px solid #5a4a1a;color:#ffeec2;border-radius:10px;padding:10px 11px;font-size:11px;line-height:1.4;position:relative">
     <b style="color:var(--yellow)">⚠ Setup needed:</b> paste your HA Long-Lived Token below (scroll down to <b>Connection</b>), tap SAVE, then alerts will fire. Without it the console can't talk to HA.
   </div>
+  <div id="iosHelp" style="display:none;margin-top:10px;background:#2a0a0a;border:1px solid #5a1a1a;color:#ffd0d0;border-radius:10px;padding:10px 11px;font-size:11px;line-height:1.4">
+    <b style="color:var(--red)">iOS "Load failed":</b> Safari is blocking the local fetch.<br>
+    • Try <b>Chrome on iPhone</b> (not Safari) → same URL<br>
+    • Safari → Settings → Apps → Safari → turn off <b>Content Blockers</b> / `Prevent Cross-Site Tracking`<br>
+    • Or use Tailscale: <code>http://100.100.177.78:8123/local/captains_console.html</code> (bypasses Virgin hub) - tell Jarvis to allow it<br>
+    • Direct HA test: open <code>http://192.168.0.208:8123</code> in Safari - if that loads but console doesn't, it's this fetch block
+  </div>
 </div>
 
 <div class="panel" id="lightsPanel">
@@ -427,7 +434,9 @@ async function haCall(service, data){
     const r = await fetch(url, {
       method:'POST',
       headers:{'Authorization':'Bearer '+tok,'Content-Type':'application/json'},
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
+      mode:'cors',
+      cache:'no-store'
     });
     if(!r.ok){
       const t = await r.text().catch(()=>'');
@@ -437,8 +446,17 @@ async function haCall(service, data){
     return await r.json().catch(()=> ({}));
   }catch(e){
     console.error(e);
-    setConn('err','Error - ' + e.message.slice(0,90));
-    toast('HA error: ' + e.message.slice(0,90), 3200);
+    const msg = (e.message||'') + '';
+    const isLoadFailed = msg.includes('Load failed') || msg.includes('Failed to fetch') || msg.includes('NetworkError');
+    if(isLoadFailed){
+      setConn('err','iOS blocked - see help below');
+      toast('iOS: Load failed - try Chrome, disable Content Blockers, or use Tailscale http://100.100.177.78:8123', 5000);
+      const help = document.getElementById('iosHelp');
+      if(help) help.style.display='block';
+    } else {
+      setConn('err','Error - ' + msg.slice(0,90));
+      toast('HA error: ' + msg.slice(0,90), 3200);
+    }
     return null;
   }
 }
@@ -562,9 +580,15 @@ async function pingHA(){
   const base=getHaBase(); const tok=getToken();
   if(!base || !tok){ setConn('warn','Set HA URL + token - then alerts will fire'); return; }
   try{
-    const r = await fetch(base+'/api/', {headers:{'Authorization':'Bearer '+tok}});
+    const r = await fetch(base+'/api/', {headers:{'Authorization':'Bearer '+tok}, mode:'cors', cache:'no-store'});
     if(r.ok){ setConn('ok','Online - '+base); } else { setConn('err','Token/URL error - '+r.status); }
-  }catch(e){ setConn('err','Cannot reach '+base); }
+  }catch(e){
+    const msg=(e.message||'')+'';
+    if(msg.includes('Load failed')||msg.includes('Failed to fetch')){
+      setConn('err','iOS blocked - see help above');
+      const help=document.getElementById('iosHelp'); if(help) help.style.display='block';
+    } else setConn('err','Cannot reach '+base);
+  }
 }
 
 // init
