@@ -534,9 +534,9 @@ async function lightsOff(){
   vibrate(18);
   stopPulse();
   const ids = selectedIds();
-  // instant - fire all in parallel, no transition wait
-  await Promise.all(ids.map(id => haCall('light/turn_off', {entity_id:id})));
-  toast('Lights off', 1200);
+  // truly instant - parallel + transition 0 (white used 0.4 but felt instant, Cut needs 0)
+  await Promise.all(ids.map(id => haCall('light/turn_off', {entity_id:id, transition:0})));
+  toast('Lights off', 1000);
 }
 
 async function testFlash(){
