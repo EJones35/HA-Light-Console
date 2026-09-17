@@ -512,8 +512,8 @@ async function clearAlert(){
   renderLights();
   const ids = selectedIds();
   for(const id of ids){
-    // warm white 4000K - use kelvin, HA supports it; fallback rgb if needed
-    await haCall('light/turn_on', {entity_id:id, kelvin:4000, brightness:255, transition:0.7});
+    // warm white 4000K - use color_temp_kelvin (kelvin deprecated)
+    await haCall('light/turn_on', {entity_id:id, color_temp_kelvin:4000, brightness:255, transition:0.7});
   }
   toast('Clear - condition normal (4000K)', 2000);
 }
@@ -534,9 +534,9 @@ async function testFlash(){
   const ids = selectedIds();
   for(const id of ids) await haCall('light/turn_on', {entity_id:id, rgb_color:[255,255,255], brightness:255, transition:0.15});
   await new Promise(r=>setTimeout(r,220));
-  for(const id of ids) await haCall('light/turn_on', {entity_id:id, kelvin:4000, brightness:120, transition:0.2});
+  for(const id of ids) await haCall('light/turn_on', {entity_id:id, color_temp_kelvin:4000, brightness:120, transition:0.2});
   await new Promise(r=>setTimeout(r,180));
-  for(const id of ids) await haCall('light/turn_on', {entity_id:id, kelvin:4000, brightness:255, transition:0.25});
+  for(const id of ids) await haCall('light/turn_on', {entity_id:id, color_temp_kelvin:4000, brightness:255, transition:0.25});
   toast('Flash test - OK', 1600);
 }
 
